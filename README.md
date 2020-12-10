@@ -1,1 +1,1 @@
-# SNMP Um das Programm auszuführen muss man die Datei main.py ausführen
+# SNMP Um das Programm auszuführen muss man die Bibliothek pysmnp installiert haben dies kann man in der cmd mit dem Befehl 'pip install pysnmp' tun. Nach der Installation muss man die Datei main.py ausführen. Im Programm kann man eine IP-Adresse angeben von der dann verschiedene Informationen ausgelesen werden.
