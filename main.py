@@ -8,5 +8,6 @@ if __name__ == "__main__":
     oidarray.append(".1.3.6.1.2.1.25.2.2.0")
 
     resultarray = snmp.get("localhost", oidarray, "public")
+    print("Seoo")
 
     print(resultarray[1])
