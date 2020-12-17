@@ -1,4 +1,21 @@
 import snmp
+import pysnmp
+import socket
+from threading import Thread
+import ipaddress
+
+def thread_function(ip, name):
+
+    try:
+        resultarray=snmp.get(str(ip), oidarray, "public", True)
+
+        counter=0
+        for i in oidarray:
+            print(oidname[counter]+ str(resultarray[i]))
+            counter=counter+1
+    except pysnmp.smi.error.PySnmpError:
+        pass
+
 
 if __name__ == "__main__":
 
@@ -28,12 +45,43 @@ if __name__ == "__main__":
     oidname.append("processnumber: ")
     oidname.append("ramsize: ")
 
-    ip=input("Geben Sie eine IP-Adresse an: ")
 
-    resultarray = snmp.get(ip, oidarray, "public")
+    while True:
 
-    counter=0
+        command=input("Geben Sie einen Befehl ein: ")
 
-    for i in oidarray:
-        print(oidname[counter] + str(resultarray[i]))
-        counter=counter+1
+        if(command=="/get"):
+            ip=input("Geben Sie eine IP-Adresse an: ")
+            try:
+                communitystr=input("Geben Sie den Communitystring ein (Bei keiner Eingabe wird 'public' verwendet (ENTER)): ")
+                if(communitystr==""):
+                    communitystr="public"
+
+                resultarray = snmp.get(ip, oidarray, communitystr)
+
+                counter=0
+            
+                for i in oidarray:
+                    print(oidname[counter] + str(resultarray[i]))
+                    counter=counter+1
+            except pysnmp.smi.error.PySnmpError: 
+                print("ERROR: Can't find informations for this address and/or communitystring\n")
+
+            input("Drücken Sie ENTER um fortzufahren\n")
+        elif(command=="/scan"):
+            network=input("Geben Sie das Netzwerk (mit Subnetzmaske) ein was sie scannen möchten: ")
+            print("...")
+
+            threads=[]
+            for ip in ipaddress.IPv4Network(network):
+                thread=Thread(target=thread_function, args=(ip, 1,))
+                thread.start()
+                threads.append(thread)
+            
+            for t in threads:
+                t.join()
+            
+
+            print("Done!")
+            input("Drücken Sie ENTER um fortzufahren\n")
+

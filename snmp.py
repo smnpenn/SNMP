@@ -1,7 +1,10 @@
 from pysnmp import hlapi
+import ipaddress
+import os
+from threading import Thread
 
 
-def get(target, oids, credentials, port=161, engine=hlapi.SnmpEngine(), context=hlapi.ContextData()):
+def get(target, oids, credentials, scanNetwork=False, port=161, engine=hlapi.SnmpEngine(), context=hlapi.ContextData()):
     handler = hlapi.getCmd(
         engine,
         hlapi.CommunityData(credentials),
@@ -9,7 +12,8 @@ def get(target, oids, credentials, port=161, engine=hlapi.SnmpEngine(), context=
         context,
         *construct_object_types(oids)
     )
-    return fetch(handler, 1)[0]
+
+    return fetch(handler, 1, scanNetwork)[0]
 
 
 
@@ -20,7 +24,7 @@ def construct_object_types(list_of_oids):
     return object_types
 
 
-def fetch(handler, count):
+def fetch(handler, count, scanNetwork):
     result = []
     for i in range(count):
         try:
@@ -31,7 +35,11 @@ def fetch(handler, count):
                     items[str(var_bind[0])] = cast(var_bind[1])
                 result.append(items)
             else:
-                raise RuntimeError('Got SNMP error: {0}'.format(error_indication))
+                if scanNetwork==False:
+                    raise RuntimeError('Got SNMP error: {0}'.format(error_indication))
+                else:
+                    result.append("Fehler")
+                    return result
         except StopIteration:
             break
     return result
@@ -49,3 +57,5 @@ def cast(value):
             except (ValueError, TypeError):
                 pass
     return value
+
+
