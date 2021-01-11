@@ -4,15 +4,11 @@ import socket
 from threading import Thread
 import ipaddress
 
-def thread_function(ip, name):
+def thread_function(ip, oid, name):
 
     try:
-        resultarray=snmp.get(str(ip), oidarray, "public", True)
+        snmp.get(str(ip), oid, "public", True)
 
-        counter=0
-        for i in oidarray:
-            print(oidname[counter]+ str(resultarray[i]))
-            counter=counter+1
     except pysnmp.smi.error.PySnmpError:
         pass
 
@@ -51,13 +47,13 @@ if __name__ == "__main__":
         command=input("Geben Sie einen Befehl ein: ")
 
         if(command=="/get"):
-            ip=input("Geben Sie eine IP-Adresse an: ")
+            ip=input("Geben Sie eine IP-Adresse ein: ")
             try:
                 communitystr=input("Geben Sie den Communitystring ein (Bei keiner Eingabe wird 'public' verwendet (ENTER)): ")
                 if(communitystr==""):
                     communitystr="public"
 
-                resultarray = snmp.get(ip, oidarray, communitystr)
+                resultarray = snmp.getMoreOIDs(ip, oidarray, communitystr)
 
                 counter=0
             
@@ -70,13 +66,18 @@ if __name__ == "__main__":
             input("Drücken Sie ENTER um fortzufahren\n")
         elif(command=="/scan"):
             network=input("Geben Sie das Netzwerk (mit Subnetzmaske) ein was sie scannen möchten: ")
-            print("...")
+            oid=input("Geben Sie eine OID ein, die von den einzelnen Hosts ausgelesen werden soll (Bei keiner Eingabe wird der Hostname ausgelesen (ENTER))")
+            print("Bitte warten, diese Operation kann ein bisschen dauern...")
+            if(oid==""):
+                oid="1.3.6.1.2.1.1.5.0"
 
             threads=[]
             for ip in ipaddress.IPv4Network(network):
-                thread=Thread(target=thread_function, args=(ip, 1,))
+                
+                thread=Thread(target=thread_function, args=(ip, oid, 1,))
                 thread.start()
                 threads.append(thread)
+                
             
             for t in threads:
                 t.join()
@@ -84,4 +85,34 @@ if __name__ == "__main__":
 
             print("Done!")
             input("Drücken Sie ENTER um fortzufahren\n")
+        elif(command=="/getbyoid"):
+            oid=input("Geben Sie die OID ein: ")
+            ip=input("Geben Sie eine IP-Adresse ein: ")
+            try:
+                communitystr=input("Geben Sie den Communitystring ein (Bei keiner Eingabe wird 'public' verwendet (ENTER)): ")
+                if(communitystr==""):
+                    communitystr="public"
+                result=snmp.get(ip, oid, communitystr)
+                
+                print(str(result))
+            except pysnmp.smi.error.MibNotFoundError:
+                print("ERROR: OID not valid!")
+            except pysnmp.smi.error.PySnmpError: 
+                print("ERROR: Can't find informations for this address and/or communitystring\n")
+            input("Drücken Sie ENTER um fortzufahren\n")
+        if(command=="/test"):
+            ip=input("Geben Sie eine IP-Adresse ein: ")
+            try:
+                communitystr=input("Geben Sie den Communitystring ein (Bei keiner Eingabe wird 'public' verwendet (ENTER)): ")
+                if(communitystr==""):
+                    communitystr="public"
+
+                result = snmp.get(ip, name, communitystr)
+            
+                print(result)
+            except pysnmp.smi.error.PySnmpError: 
+                print("ERROR: Can't find informations for this address and/or communitystring\n")
+
+            input("Drücken Sie ENTER um fortzufahren\n")
+
 
