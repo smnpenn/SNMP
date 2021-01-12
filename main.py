@@ -9,10 +9,13 @@ def thread_function(ip, oid, name):
     try:
         snmp.get(str(ip), oid, "public", True)
 
-    except pysnmp.smi.error.PySnmpError:
-        pass
+    except pysnmp.smi.error.MibNotFoundError:
+        print("ERROR: Invalid OID!")
+    
     except ip.AddressValueError:
-        print("ERROR: Network addrss not valid!")
+        print("ERROR: Invalid network address!")
+    except ValueError:
+        print("ERROR: Invalid network address!")
 
 
 if __name__ == "__main__":
@@ -62,8 +65,8 @@ if __name__ == "__main__":
 
                 counter=0
             
-                for i in oidarray:
-                    print(oidname[counter] + str(resultarray[i]))
+                for i in oidarray:      #einzelnen Informationen ausgeben
+                    print(oidname[counter] + str(resultarray[i])) 
                     counter=counter+1
             except pysnmp.smi.error.PySnmpError: 
                 print("ERROR: Can't find informations for this address and/or communitystring\n")
@@ -79,12 +82,19 @@ if __name__ == "__main__":
                 oid="1.3.6.1.2.1.1.5.0"
 
             threads=[]
-            for ip in ipaddress.IPv4Network(network):
-                
-                thread=Thread(target=thread_function, args=(ip, oid, 1,))
-                thread.start()
-                threads.append(thread)
-                
+            
+            try:
+                for ip in ipaddress.IPv4Network(network):  #von allen IP-Adressen im Netzwerk wird /get gemacht
+                    try: 
+                        thread=Thread(target=thread_function, args=(ip, oid, 1,)) #mit Threads damit es nicht ewig dauert
+                        thread.start()
+                        threads.append(thread)
+                    except ip.AddressValueError:
+                        print("ERROR: Invalid network address!")
+                    except ValueError:
+                        print("ERROR: Invalid network address!") 
+            except ValueError:
+                print("ERROR: Invalid network address!")    
             
             for t in threads:
                 t.join()
@@ -103,7 +113,7 @@ if __name__ == "__main__":
                 
                 print(str(result))
             except pysnmp.smi.error.MibNotFoundError:
-                print("ERROR: OID not valid!")
+                print("ERROR: Invalid OID!")
             except pysnmp.smi.error.PySnmpError: 
                 print("ERROR: Can't find informations for this address and/or communitystring\n")
             input("Drücken Sie ENTER um fortzufahren\n")
@@ -111,4 +121,3 @@ if __name__ == "__main__":
             print("Ihre verfügbaren Befehle sind:\n/get --> mehrere Informationen (uptime, contact, name, location, systemdescription, processnumber, ramsize) über einen bestimmten Host\n/scan --> Sie erhalten alle Namen der Hosts in ihrem Netzwerk, die SNMP aktiviert/konfiguriert haben\n/getbyoid --> Sie erhalten eine bestimmte Information von einem bestimmten Host\n")
         else:
             print("Ungültiger Befehl\nGeben Sie '/help' ein um zu sehen welche Befehle für Sie verfügbar sind.")
-
