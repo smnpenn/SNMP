@@ -11,6 +11,8 @@ def thread_function(ip, oid, name):
 
     except pysnmp.smi.error.PySnmpError:
         pass
+    except ip.AddressValueError:
+        print("ERROR: Network addrss not valid!")
 
 
 if __name__ == "__main__":
@@ -41,6 +43,9 @@ if __name__ == "__main__":
     oidname.append("processnumber: ")
     oidname.append("ramsize: ")
 
+    print("Willkommen im SNMP-Tool von Simon Penn!")
+    print("Geben Sie /help ein um zu sehen welche Befehle für sie verfügbar sind!\n")
+
 
     while True:
 
@@ -61,6 +66,8 @@ if __name__ == "__main__":
                     print(oidname[counter] + str(resultarray[i]))
                     counter=counter+1
             except pysnmp.smi.error.PySnmpError: 
+                print("ERROR: Can't find informations for this address and/or communitystring\n")
+            except IndexError:
                 print("ERROR: Can't find informations for this address and/or communitystring\n")
 
             input("Drücken Sie ENTER um fortzufahren\n")
@@ -100,19 +107,8 @@ if __name__ == "__main__":
             except pysnmp.smi.error.PySnmpError: 
                 print("ERROR: Can't find informations for this address and/or communitystring\n")
             input("Drücken Sie ENTER um fortzufahren\n")
-        if(command=="/test"):
-            ip=input("Geben Sie eine IP-Adresse ein: ")
-            try:
-                communitystr=input("Geben Sie den Communitystring ein (Bei keiner Eingabe wird 'public' verwendet (ENTER)): ")
-                if(communitystr==""):
-                    communitystr="public"
-
-                result = snmp.get(ip, name, communitystr)
-            
-                print(result)
-            except pysnmp.smi.error.PySnmpError: 
-                print("ERROR: Can't find informations for this address and/or communitystring\n")
-
-            input("Drücken Sie ENTER um fortzufahren\n")
-
+        elif(command=="/help"):
+            print("Ihre verfügbaren Befehle sind:\n/get --> mehrere Informationen (uptime, contact, name, location, systemdescription, processnumber, ramsize) über einen bestimmten Host\n/scan --> Sie erhalten alle Namen der Hosts in ihrem Netzwerk, die SNMP aktiviert/konfiguriert haben\n/getbyoid --> Sie erhalten eine bestimmte Information von einem bestimmten Host\n")
+        else:
+            print("Ungültiger Befehl\nGeben Sie '/help' ein um zu sehen welche Befehle für Sie verfügbar sind.")
 
